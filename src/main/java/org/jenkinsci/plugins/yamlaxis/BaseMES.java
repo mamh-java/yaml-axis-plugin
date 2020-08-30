@@ -1,44 +1,47 @@
-package org.jenkinsci.plugins.yamlaxis
+package org.jenkinsci.plugins.yamlaxis;
 
-import hudson.AbortException
-import hudson.console.ModelHyperlinkNote
-import hudson.matrix.*
-import hudson.matrix.MatrixBuild.MatrixBuildExecution
-import hudson.matrix.listeners.MatrixBuildListener
-import hudson.model.*
 
-import javax.annotation.Nullable
 
 //seems like groovy wants the abstract class too
 //import hudson.tasks.test.AggregatedTestResultAction
+
+import hudson.console.ModelHyperlinkNote;
+import hudson.matrix.*;
+import hudson.matrix.listeners.MatrixBuildListener;
+import hudson.model.Result;
+
+import javax.annotation.Nullable;
+import java.io.IOException;
+import java.util.*;
+
 /**
  * @link https://github.com/jenkinsci/matrix-groovy-execution-strategy-plugin/blob/matrix-groovy-execution-strategy-plugin-1.0.4/src/main/groovy/org/jenkinsci/plugins/BaseMES.groovy
  */
 abstract class BaseMES extends MatrixExecutionStrategy {
 
     @Override
-    Result run(MatrixBuild.MatrixBuildExecution execution) throws InterruptedException, IOException {
+    public Result run(MatrixBuild.MatrixBuildExecution execution) throws InterruptedException, IOException {
 
         //final Collection<MatrixConfiguration> configurations = new HashSet<MatrixConfiguration>()
-        List<Combination> combs = []
-        Map<Combination, MatrixConfiguration> mc = [:]
+        List<Combination> combs = new ArrayList<>();
+        Map<Combination, MatrixConfiguration> mc = new HashMap<>();
 
-        execution.activeConfigurations.each {
-            def c = it.combination
-
+        Set<MatrixConfiguration> configurations = execution.getActiveConfigurations();
+        for (MatrixConfiguration configuration : configurations) {
+            Combination c = configuration.getCombination();
             //only add it if the build listeners say so
-            if (MatrixBuildListener.buildConfiguration(execution.build, it)) {
-                combs << c
-                mc[c] = it
+            if (MatrixBuildListener.buildConfiguration(execution.getBuild(), configuration)) {
+                combs.add(c);
+                mc.put(c, configuration);
             }
         }
 
-        Result r = Result.SUCCESS
+        Result r = Result.SUCCESS;
 
-        def multiCombs = decideOrder(execution, combs)
+        Map multiCombs = decideOrder(execution, combs);
 
-        if (notifyStartBuild(execution.aggregators)) {
-            return Result.FAILURE
+        if (notifyStartBuild(execution.getAggregators())) {
+            return Result.FAILURE;
         }
 
         multiCombs.any { k, v ->
@@ -69,7 +72,7 @@ abstract class BaseMES extends MatrixExecutionStrategy {
     //override this and return a list of list of combinations
     //and the builds will be run each inner list in parallel then do the next list
     //and if anything fails it stops
-    abstract Map decideOrder(MatrixBuild.MatrixBuildExecution execution, List<Combination> comb)
+    public abstract Map decideOrder(MatrixBuild.MatrixBuildExecution execution, List<Combination> comb);
 
     void scheduleConfigurationBuild(MatrixBuildExecution exec, MatrixConfiguration c) {
         MatrixBuild build = exec.build
@@ -135,18 +138,19 @@ abstract class BaseMES extends MatrixExecutionStrategy {
         }
     }
 
-    Result getResult(@Nullable MatrixRun run) {
+    public Result getResult(@Nullable MatrixRun run) {
         // null indicates that the run was cancelled before it even gets going
-        run != null ? run.result : Result.ABORTED
+        return run != null ? run.getResult() : Result.ABORTED;
     }
 
-    boolean notifyStartBuild(List<MatrixAggregator> aggregators) throws InterruptedException, IOException {
-        aggregators.each { a ->
-            if (!a.startBuild()) {
-                return true
+    public boolean notifyStartBuild(List<MatrixAggregator> aggregators) throws InterruptedException, IOException {
+        for (MatrixAggregator aggregator : aggregators) {
+            if (!aggregator.startBuild()) {
+                return true;
             }
         }
-        false
+
+        return false;
     }
 
     void notifyEndBuild(MatrixRun b, List<MatrixAggregator> aggregators) throws InterruptedException, IOException {

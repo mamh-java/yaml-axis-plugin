@@ -1,6 +1,9 @@
-package org.jenkinsci.plugins.yamlaxis.util
+package org.jenkinsci.plugins.yamlaxis.util;
 
-final class MatrixUtils {
+import java.util.List;
+import java.util.Map;
+
+public final class MatrixUtils {
     private MatrixUtils(){
     }
 
@@ -10,9 +13,9 @@ final class MatrixUtils {
     }
 
     // reject element in variables if match element of excludes
-    static <T extends Map> List<T> reject(List<T> variables, List<T> excludes){
+    public static <T extends Map> List<T> reject(List<T> variables, List<T> excludes){
         if (excludes.isEmpty()){
-            return variables
+            return variables;
         }
 
         variables.findAll { variable ->
