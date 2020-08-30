@@ -5,11 +5,12 @@ package org.jenkinsci.plugins.yamlaxis;
 //seems like groovy wants the abstract class too
 //import hudson.tasks.test.AggregatedTestResultAction
 
+import hudson.AbortException;
 import hudson.console.ModelHyperlinkNote;
 import hudson.matrix.*;
 import hudson.matrix.listeners.MatrixBuildListener;
-import hudson.model.Result;
-
+import hudson.model.*;
+import hudson.model.Queue;
 import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.*;
@@ -74,41 +75,42 @@ abstract class BaseMES extends MatrixExecutionStrategy {
     //and if anything fails it stops
     public abstract Map decideOrder(MatrixBuild.MatrixBuildExecution execution, List<Combination> comb);
 
-    void scheduleConfigurationBuild(MatrixBuildExecution exec, MatrixConfiguration c) {
-        MatrixBuild build = exec.build
-        exec.listener.logger.println('Triggering ' + ModelHyperlinkNote.encodeTo(c))
+    public void scheduleConfigurationBuild(MatrixBuild.MatrixBuildExecution exec, MatrixConfiguration c) {
+        MatrixBuild build = exec.getBuild();
+        exec.getListener().getLogger().println("Triggering " + ModelHyperlinkNote.encodeTo(c));
 
         // filter the parent actions for those that can be passed to the individual jobs.
-        List<Action> childActions = new ArrayList<Action>(build.getActions(MatrixChildAction))
-        childActions.addAll(build.getActions(ParametersAction)) // used to implement MatrixChildAction
-        c.scheduleBuild(childActions, new Cause.UpstreamCause((Run) build))
+        List<Action> childActions = new ArrayList<Action>(build.getActions(MatrixChildAction.class));
+
+        childActions.addAll(build.getActions(ParametersAction.class)); // used to implement MatrixChildAction
+        c.scheduleBuild(childActions, new Cause.UpstreamCause((Run) build));
     }
 
-    MatrixRun waitForCompletion(MatrixBuildExecution exec, MatrixConfiguration c)
+    public MatrixRun waitForCompletion(MatrixBuild.MatrixBuildExecution exec, MatrixConfiguration c)
             throws InterruptedException, IOException {
 
-        BuildListener listener = exec.listener
-        String whyInQueue = ''
-        long startTime = System.currentTimeMillis()
+        BuildListener listener = exec.getListener();
+        String whyInQueue = "";
+        long startTime = System.currentTimeMillis();
 
         // wait for the completion
-        int appearsCancelledCount = 0
+        int appearsCancelledCount = 0;
         while (true) {
-            MatrixRun b = c.getBuildByNumber(exec.build.number)
+            MatrixRun b = c.getBuildByNumber(exec.getBuild().number);
 
             // two ways to get beyond this. one is that the build starts and gets done,
             // or the build gets cancelled before it even started.
             if (b != null && !b.isBuilding()) {
-                Result buildResult = b.result
+                Result buildResult = b.getResult();
                 if (buildResult != null) {
-                    return b
+                    return b;
                 }
             }
-            Queue.Item qi = c.queueItem
+            Queue.Item qi = c.getQueueItem();
             if (b == null && qi == null) {
-                appearsCancelledCount++
+                appearsCancelledCount++;
             } else {
-                appearsCancelledCount = 0
+                appearsCancelledCount = 0;
             }
 
             if (appearsCancelledCount >= 5) {
@@ -119,22 +121,24 @@ abstract class BaseMES extends MatrixExecutionStrategy {
                 // http://www.nabble.com/Anyone-using-AccuRev-plugin--tt21634577.html#a21671389
                 // because of this, we really make sure that the build is cancelled by doing this 5
                 // times over 5 seconds
-                listener.logger.println(ModelHyperlinkNote.encodeTo(c) + ' appears to be cancelled')
-                return null
+                listener.getLogger().println(ModelHyperlinkNote.encodeTo(c) + " appears to be cancelled");
+                return null;
             }
 
             if (qi != null) {
                 // if the build seems to be stuck in the queue, display why
-                String why = qi.why
-                if (why != null && !why == whyInQueue && System.currentTimeMillis() - startTime > 5000) {
-                    listener.logger.print(
-                            'Configuration ' + ModelHyperlinkNote.encodeTo(c) + ' is still in the queue: ')
-                    qi.causeOfBlockage.print(listener) //this is still shown on the same line
-                    whyInQueue = why
+                String why = qi.getWhy();
+                if (why != null && ! why.equals(whyInQueue) && System.currentTimeMillis() - startTime > 5000) {
+
+                    listener.getLogger().print(
+                            "Configuration " + ModelHyperlinkNote.encodeTo(c) + " is still in the queue: ");
+
+                    qi.getCauseOfBlockage().print(listener); //this is still shown on the same line
+                    whyInQueue = why;
                 }
             }
 
-            Thread.sleep(1000)
+            Thread.sleep(1000);
         }
     }
 
@@ -153,16 +157,16 @@ abstract class BaseMES extends MatrixExecutionStrategy {
         return false;
     }
 
-    void notifyEndBuild(MatrixRun b, List<MatrixAggregator> aggregators) throws InterruptedException, IOException {
+    public void notifyEndBuild(MatrixRun b, List<MatrixAggregator> aggregators) throws InterruptedException, IOException {
         if (b == null) {
-            return // can happen if the configuration run gets cancelled before it gets started.
+            return; // can happen if the configuration run gets cancelled before it gets started.
         }
-
-        aggregators.each { a ->
-            if (!a.endRun(b)) {
-                throw new AbortException()
+        for (MatrixAggregator aggregator : aggregators) {
+            if (!aggregator.endRun(b)) {
+                throw new AbortException();
             }
         }
+
     }
 
 }

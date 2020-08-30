@@ -8,8 +8,14 @@ public final class MatrixUtils {
     }
 
     // Whether parent map contains all entry of child map
-    static <T extends Map> boolean contains(T parent, T child) {
-        child.every { parent.containsKey(it.key) && parent[it.key] == it.value }
+    public static <T extends Map<String, String>> boolean contains(T parent, T child) {
+        for (Map.Entry<String, String> childEntry : child.entrySet()) {
+            String childkey = childEntry.getKey();
+            String childValue = childEntry.getValue();
+            boolean b = parent.containsKey(childkey) && parent.get(childkey).equals(childValue);
+        }
+        // TODO not implement.
+        return false;
     }
 
     // reject element in variables if match element of excludes
@@ -18,8 +24,10 @@ public final class MatrixUtils {
             return variables;
         }
 
-        variables.findAll { variable ->
-            !excludes.any{ exclude -> contains(variable, exclude) }
-        }
+//        variables.findAll { variable ->
+//            !excludes.any{ exclude -> contains(variable, exclude) }
+//        }
+        // todo  not implement.
+        return variables;
     }
 }

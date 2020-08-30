@@ -7,13 +7,11 @@ import hudson.matrix.AxisDescriptor;
 import hudson.matrix.MatrixBuild;
 import hudson.util.FormValidation;
 import net.sf.json.JSONObject;
-import org.jenkinsci.plugins.yamlaxis.util.BuildUtils;
 import org.jenkinsci.plugins.yamlaxis.util.DescriptorUtils;
 import org.kohsuke.stapler.DataBoundConstructor;
 import org.kohsuke.stapler.QueryParameter;
 import org.kohsuke.stapler.StaplerRequest;
 
-import java.io.IOException;
 import java.util.List;
 
 class YamlAxis extends Axis {
@@ -32,24 +30,17 @@ class YamlAxis extends Axis {
         }
 
         // NOTE: Plugin can not get workspace location in this method
-        YamlLoader loader = new YamlFileLoader(yamlFile: yamlFile);
+        YamlLoader loader = new YamlFileLoader(getYamlFile());
 
-        try {
-            return computedValues = loader.loadStrings(name);
-        } catch (IOException e){
-        }
+        return computedValues = loader.loadStrings(name);
     }
 
     @Override
-    List<String> rebuild(MatrixBuild.MatrixBuildExecution context) {
+    public List<String> rebuild(MatrixBuild.MatrixBuildExecution context) {
         FilePath workspace = context.getBuild().getModuleRoot();
-        YamlLoader loader = new YamlFileLoader(yamlFile: yamlFile, workspace: workspace);
+        YamlLoader loader = new YamlFileLoader(yamlFile, workspace);
 
-        try {
-            computedValues = loader.loadStrings(name);
-        } catch (IOException e){
-            BuildUtils.log(context, "[WARN] Can not read yamlFile: ${yamlFile}", e);
-        }
+        computedValues = loader.loadStrings(name);
     }
 
     public String getYamlFile(){
