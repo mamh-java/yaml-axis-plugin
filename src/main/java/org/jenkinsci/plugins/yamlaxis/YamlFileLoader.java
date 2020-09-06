@@ -49,11 +49,8 @@ public class YamlFileLoader extends YamlLoader {
         try{
             Yaml yaml = new Yaml(new SafeConstructor());
             input = createFilePath().read();
-            yaml.load(input);
-
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } catch (IOException e) {
+            return yaml.load(input);
+        } catch (InterruptedException | IOException e) {
             e.printStackTrace();
         } finally {
             if(input!=null) {

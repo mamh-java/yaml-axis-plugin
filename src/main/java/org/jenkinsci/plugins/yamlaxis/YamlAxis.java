@@ -16,9 +16,10 @@ import java.util.List;
 
 class YamlAxis extends Axis {
     private List<String> computedValues = null;
+    private String valueString;
 
     @DataBoundConstructor
-    YamlAxis(String name, String valueString, List<String> computedValues) {
+    public YamlAxis(String name, String valueString, List<String> computedValues) {
         super(name, valueString);
         this.computedValues = computedValues;
     }
@@ -30,17 +31,19 @@ class YamlAxis extends Axis {
         }
 
         // NOTE: Plugin can not get workspace location in this method
-        YamlLoader loader = new YamlFileLoader(getYamlFile());
+        //YamlLoader loader = new YamlFileLoader(getYamlFile());
 
-        return computedValues = loader.loadStrings(name);
+        //return computedValues = loader.loadStrings(name);
+        return null;
     }
 
     @Override
     public List<String> rebuild(MatrixBuild.MatrixBuildExecution context) {
         FilePath workspace = context.getBuild().getModuleRoot();
-        YamlLoader loader = new YamlFileLoader(yamlFile, workspace);
+        //YamlLoader loader = new YamlFileLoader(yamlFile, workspace);
 
-        computedValues = loader.loadStrings(name);
+        //computedValues = loader.loadStrings(name);
+        return null;
     }
 
     public String getYamlFile(){
@@ -52,7 +55,7 @@ class YamlAxis extends Axis {
      * Descriptor for this plugin.
      */
     @Extension
-    static class DescriptorImpl extends AxisDescriptor {
+    public static class DescriptorImpl extends AxisDescriptor {
         final String displayName = "Yaml Axis";
 
         /**

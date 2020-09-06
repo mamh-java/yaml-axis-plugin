@@ -5,15 +5,9 @@ import java.util.Map;
 
 public abstract class YamlLoader {
     public List<String> loadStrings(String key){
-        Map<String, String> content = getContent();
-        Object values = content.get(key);
-
-        if(values == null){
-            return null;
-        }
-        values.collect {
-            it.toString()
-        }
+        Map<String, List> content = getContent();
+        List list = content.get(key);
+        return list;
     }
 
     /**
@@ -21,15 +15,18 @@ public abstract class YamlLoader {
      * @param key
      * @return if key is not found, return null
      */
-    public List<Map<String, String>> loadMaps(String key){
+    public List<Map> loadMaps(String key){
         Map content = getContent();
-        def values = content.get(key);
-        if(values == null){
-            return null;
-        }
-        values.collect {
-            it.collectEntries { k, v -> [k, v.toString()] }
-        }
+        List<Map> list = (List<Map>) content.get(key);
+        return list;
+//        Map content = getContent();
+//        def values = content.get(key);
+//        if(values == null){
+//            return null;
+//        }
+//        values.collect {
+//            it.collectEntries { k, v -> [k, v.toString()] }
+//        }
     }
 
     public abstract Map getContent();

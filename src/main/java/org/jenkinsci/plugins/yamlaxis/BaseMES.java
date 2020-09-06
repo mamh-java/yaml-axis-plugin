@@ -45,29 +45,30 @@ abstract class BaseMES extends MatrixExecutionStrategy {
             return Result.FAILURE;
         }
 
-        multiCombs.any { k, v ->
-
-            execution.listener.logger.println("Running ${k}")
-
-            v.each { inner ->
-                def mc2 = mc[inner]
-                scheduleConfigurationBuild(execution, mc2)
-            }
-
-            v.each { inner ->
-                def mc2 = mc[inner]
-
-                MatrixRun run = waitForCompletion(execution, mc2)
-                notifyEndBuild(run, execution.aggregators)
-                execution.listener.logger.println(
-                        'Completed ' + ModelHyperlinkNote.encodeTo(mc2) + ' ' + getResult(run))
-                r = r.combine(getResult(run))
-            }
-
-            //choke if we have a failure
-            r == Result.FAILURE
-        }
-        r
+//        multiCombs.any { k, v ->
+//
+//            execution.listener.logger.println("Running ${k}")
+//
+//            v.each { inner ->
+//                def mc2 = mc[inner]
+//                scheduleConfigurationBuild(execution, mc2)
+//            }
+//
+//            v.each { inner ->
+//                def mc2 = mc[inner]
+//
+//                MatrixRun run = waitForCompletion(execution, mc2)
+//                notifyEndBuild(run, execution.aggregators)
+//                execution.listener.logger.println(
+//                        'Completed ' + ModelHyperlinkNote.encodeTo(mc2) + ' ' + getResult(run))
+//                r = r.combine(getResult(run))
+//            }
+//
+//            //choke if we have a failure
+//            r == Result.FAILURE
+//        }
+//        r
+        return null;
     }
 
     //override this and return a list of list of combinations

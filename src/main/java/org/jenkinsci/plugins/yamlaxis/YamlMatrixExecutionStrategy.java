@@ -27,7 +27,7 @@ class YamlMatrixExecutionStrategy extends BaseMES {
     private volatile List<Combination> excludes = null;
 
     @DataBoundConstructor
-    YamlMatrixExecutionStrategy(String yamlType, String yamlText, String yamlFile, String excludeKey){
+    public YamlMatrixExecutionStrategy(String yamlType, String yamlText, String yamlFile, String excludeKey){
         this.yamlType = yamlType;
         this.yamlText = yamlText;
         this.yamlFile = yamlFile;
@@ -40,11 +40,12 @@ class YamlMatrixExecutionStrategy extends BaseMES {
 
     @Override
     public Map decideOrder(MatrixBuild.MatrixBuildExecution execution, List<Combination> comb) {
-        List<Combination> excludeCombinations = loadExcludes(execution)
-        List<Combination> combinations = MatrixUtils.reject(comb, excludeCombinations)
-
-        BuildUtils.log(execution, "excludes=${excludeCombinations}")
-        ["YamlMatrixExecutionStrategy": combinations]
+//        List<Combination> excludeCombinations = loadExcludes(execution)
+//        List<Combination> combinations = MatrixUtils.reject(comb, excludeCombinations)
+//
+//        BuildUtils.log(execution, "excludes=${excludeCombinations}")
+//        ["YamlMatrixExecutionStrategy": combinations]
+        return null;
     }
 
     boolean isYamlTypeFile(){
@@ -60,18 +61,19 @@ class YamlMatrixExecutionStrategy extends BaseMES {
             return excludes;
         }
 
-        try{
-            List<Map<String, String>> values = getYamlLoader(execution).loadMaps(excludeKey);
-            if(values == null){
-                BuildUtils.log(execution, "[WARN] NotFound excludeKey ${excludeKey}");
-                return [];
-            }
-            values.collect { new Combination(it) }
-
-        } catch (IOException e) {
-            BuildUtils.log(execution, "[WARN] Can not read yamlFile: ${yamlFile}", e)
-            [];
-        }
+//        try{
+//            List<Map<String, String>> values = getYamlLoader(execution).loadMaps(excludeKey);
+//            if(values == null){
+//                BuildUtils.log(execution, "[WARN] NotFound excludeKey ${excludeKey}");
+//                return [];
+//            }
+//            values.collect { new Combination(it) }
+//
+//        } catch (IOException e) {
+//            BuildUtils.log(execution, "[WARN] Can not read yamlFile: ${yamlFile}", e)
+//            [];
+//        }
+        return null;
     }
 
     private YamlLoader getYamlLoader(MatrixBuild.MatrixBuildExecution execution){
@@ -87,7 +89,7 @@ class YamlMatrixExecutionStrategy extends BaseMES {
     }
 
     @Extension
-    static class DescriptorImpl extends MatrixExecutionStrategyDescriptor {
+    public static class DescriptorImpl extends MatrixExecutionStrategyDescriptor {
         final String displayName = "Yaml matrix execution strategy";
 
         @Override
